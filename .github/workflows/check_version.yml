@@ -82,20 +82,21 @@ jobs:
             
 
       - name: Prepare PR body
-        shell: bash
-        run: |
-          pr_input='${{ inputs.pr_body }}'
-          if [ -n "$pr_input" ]; then
-            echo "PR_BODY<<EOF" >> $GITHUB_ENV
-            printf '%s'"$pr_input"' >> $GITHUB_ENV
-            echo "EOF" >> $GITHUB_ENV
-          else
-            echo "PR_BODY<<EOF" >> $GITHUB_ENV
-            echo "${REPOSITORY_URL}/blob/${LATEST_VERSION}/Changelog" >> $GITHUB_ENV
-            echo "" >> $GITHUB_ENV
-            echo "${REPOSITORY_URL}/compare/${OLD_VERSION}...${LATEST_VERSION}" >> $GITHUB_ENV
-            echo "EOF" >> $GITHUB_ENV
-          fi
+        uses: jannekem/run-python-script-action@v1
+        with:
+          script: |
+            import os
+
+            pr_input = '${{ inputs.pr_body }}'
+            repo_url = '${{ env.REPOSITORY_URL }}'
+            latest = '${{ env.LATEST_VERSION }}'
+            old = '${{ env.OLD_VERSION }}'
+
+            if pr_input and pr_input.strip():
+                set_env('PR_BODY', pr_input)
+            else:
+                body = f"{repo_url}/blob/{latest}/Changelog\n\n{repo_url}/compare/{old}...{latest}"
+                set_env('PR_BODY', body)
 
       - name: Create Pull Request
         if: env.FOUND_NEW_VERSION
