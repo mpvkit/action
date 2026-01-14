@@ -11,14 +11,14 @@ on:
         description: library name
         required: true
         type: string
-      try_run:
-        description: 'Try run the build without pushing changes or creating a release'
-        default: false
-        type: boolean
       macos_15:
          description: 'Use macOS 15 runner instead of macOS 14'
          default: false
          type: boolean
+      try_run:
+        description: 'Try run the build without pushing changes or creating a release'
+        default: false
+        type: boolean
 
 
 jobs:
