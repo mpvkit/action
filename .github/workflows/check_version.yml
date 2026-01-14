@@ -11,6 +11,10 @@ on:
         description: library name
         required: true
         type: string
+      pr_body:
+        description: custom pull request body (optional)
+        required: false
+        type: string
 
 jobs:
   build:
@@ -38,6 +42,7 @@ jobs:
           else
             repo_url="https://github.com/$repo_input"
           fi
+          echo "repository url: $repo_url"
           echo "REPOSITORY_URL=$repo_url" >> $GITHUB_ENV
 
 
@@ -76,6 +81,22 @@ jobs:
                 file.write(content)
             
 
+      - name: Prepare PR body
+        shell: bash
+        run: |
+          pr_input='${{ inputs.pr_body }}'
+          if [ -n "$pr_input" ]; then
+            echo "PR_BODY<<EOF" >> $GITHUB_ENV
+            printf '%s'"$pr_input"' >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
+          else
+            echo "PR_BODY<<EOF" >> $GITHUB_ENV
+            echo "${REPOSITORY_URL}/blob/${LATEST_VERSION}/Changelog" >> $GITHUB_ENV
+            echo "" >> $GITHUB_ENV
+            echo "${REPOSITORY_URL}/compare/${OLD_VERSION}...${LATEST_VERSION}" >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
+          fi
+
       - name: Create Pull Request
         if: env.FOUND_NEW_VERSION
         uses: peter-evans/create-pull-request@v6
@@ -83,9 +104,6 @@ jobs:
           add-paths: |
             ./Sources/BuildScripts/XCFrameworkBuild/main.swift
           title: "bump version to ${{ env.LATEST_VERSION }}"
-          body: |
-            ${{ env.REPOSITORY_URL }}/blob/${{ env.LATEST_VERSION }}/Changelog
-
-            ${{ env.REPOSITORY_URL }}/compare/${{ env.OLD_VERSION }}...${{ env.LATEST_VERSION }}
+          body: ${{ env.PR_BODY }}
           commit-message: "chore: bump version to ${{ env.LATEST_VERSION }}"
           
