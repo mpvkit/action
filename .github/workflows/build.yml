@@ -15,13 +15,17 @@ on:
         description: 'Try run the build without pushing changes or creating a release'
         default: false
         type: boolean
+      macos_15:
+         description: 'Use macOS 15 runner instead of macOS 14'
+         default: false
+         type: boolean
 
 
 jobs:
   build:
     permissions:
       contents: write
-    runs-on: macos-14
+    runs-on: ${{ inputs.macos_15 && 'macos-15' || 'macos-14' }}
     steps:
     - uses: actions/checkout@v4
 
@@ -34,6 +38,7 @@ jobs:
         brew install ninja
 
     - name: Setup Xcode to support visionOS
+      if: ${{ inputs.macos_15 == false }}
       run: |
         sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
         xcodebuild -showsdks
